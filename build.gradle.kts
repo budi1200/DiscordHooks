@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "si.budimir"
-version = "1.2.0-SNAPSHOT"
+version = "1.3.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -43,12 +43,17 @@ tasks.shadowJar {
     minimize {}
 }
 
+tasks.processResources {
+    expand("version" to project.version)
+}
+
 tasks.register("copyToServer"){
-    dependsOn("clean")
     dependsOn("shadowJar")
 
-    copy {
-        from("build/libs/DiscordHooks-" + project.version + "-all.jar")
-        into("C:\\Users\\budi1\\Desktop\\Custom Plugins\\01-proxy\\plugins")
+    doLast {
+        copy {
+            from("build/libs/DiscordHooks-" + project.version + "-all.jar")
+            into("C:\\Users\\budi1\\Desktop\\Custom Plugins\\01-proxy\\plugins")
+        }
     }
 }

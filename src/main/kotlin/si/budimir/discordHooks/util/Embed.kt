@@ -9,12 +9,14 @@ data class Embed(
 
 @Serializable
 data class EmbedContent(
-    val description: String,
+    val title: String? = null,
+    val description: String?,
     val color: Int,
-    val timestamp: String,
+    val timestamp: String?,
     val footer: Footer,
     val thumbnail: Thumbnail,
-    val author: Author,
+    val author: Author?,
+    val fields: ArrayList<Field> = arrayListOf()
 )
 
 @Serializable
@@ -34,6 +36,8 @@ data class Author(
 )
 
 @Serializable
-data class Fields(
-    val fields: ArrayList<String>? = null
+data class Field(
+    val name: String,
+    val value: String,
+    val inline: Boolean = false
 )

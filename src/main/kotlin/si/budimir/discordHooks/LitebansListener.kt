@@ -1,8 +1,11 @@
 package si.budimir.discordHooks
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
 import litebans.api.Database
 import litebans.api.Entry
 import litebans.api.Events
+import si.budimir.discordHooks.util.*
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
@@ -12,10 +15,8 @@ class LitebansListener : Events.Listener() {
     private val plugin = DiscordHooksMain.instance
 
     override fun entryAdded(entry: Entry) {
-        DiscordHooksMain.instance.logger.info("ENTRY ADDED")
-
         getPlayerName(entry.uuid) { result ->
-            WebHookHandlerLegacy().send(
+            val embed = buildEmbed(
                 entry.type,
                 entry.id.toInt(),
                 result,
@@ -24,6 +25,8 @@ class LitebansListener : Events.Listener() {
                 entry.durationString,
                 entry.isIpban
             )
+
+            sendEmbed(embed)
         }
     }
 
@@ -54,5 +57,35 @@ class LitebansListener : Events.Listener() {
             }
             callback(playerName)
         }
+    }
+
+    private fun buildEmbed(
+        type: String,
+        id: Int,
+        player: String?,
+        reason: String,
+        issuer: String?,
+        duration: String,
+        isIpBan: Boolean
+    ): EmbedContent {
+        val ip: String = if (isIpBan) "IP " else ""
+
+        val title = ip + type.toLowerCase().capitalize()
+        val thumbnail = Thumbnail("https://minotar.net/helm/${player}/40.png")
+        val footer = Footer("https://minotar.net/helm/${issuer}/40.png", "Issuer: $issuer • ID #${id}")
+        val fields = arrayListOf<Field>()
+
+        fields.add(Field("Player", player ?: "Error", true))
+        fields.add(Field("Duration", duration, true))
+        fields.add(Field("Reason", reason.replace("§.".toRegex(), "")))
+
+        return EmbedContent(title, null, 12597820, null, footer, thumbnail, null, fields)
+    }
+
+    private fun sendEmbed(entry: EmbedContent) {
+        val embed = Embed(arrayListOf(entry))
+
+        val json = Json.encodeToJsonElement(embed)
+        WebHookHandler.send(json.toString(), plugin.mainConfig.getString("webhooks.litebans"))
     }
 }

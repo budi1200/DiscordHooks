@@ -1,9 +1,11 @@
 name: DiscordHooks
-version: 1.2.0
+version: ${version}
 author: budi1200
 main: si.budimir.discordHooks.DiscordHooksMain
 api-version: 1.16
 depends: [LiteBans, LuckPerms]
+libraries:
+  - org.jetbrains.kotlin:kotlin-stdlib:1.5.10
 commands:
   reload:
     description: Reload plugin

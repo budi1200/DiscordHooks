@@ -26,7 +26,7 @@ class LuckpermsNodeChangeListener(private val plugin: DiscordHooksMain, private 
         val author = Author(type)
         val thumbnail = Thumbnail("https://raw.githubusercontent.com/lucko/LuckPermsWeb/master/public/logo.png")
         val footer = Footer("https://minotar.net/helm/${sender.split("@")[0]}/40.png", "Issuer: $sender")
-        val main = EmbedContent("Detected a permissions change for: **${target}** ```${desc}```", 9756419, timestamp, footer, thumbnail, author)
+        val main = EmbedContent(null, "Detected a permissions change for: **${target}** ```${desc}```", 9756419, timestamp, footer, thumbnail, author)
         arrlist.add(main)
 
         if (!isTimerRunning) {
