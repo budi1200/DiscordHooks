@@ -1,12 +1,12 @@
 plugins {
     idea
-    kotlin("jvm") version "1.4.31"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    kotlin("jvm") version "1.5.21"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
     kotlin("plugin.serialization") version "1.4.32"
 }
 
 group = "si.budimir"
-version = "1.3.0-SNAPSHOT"
+version = "1.4.0"
 
 repositories {
     mavenCentral()
@@ -33,7 +33,7 @@ idea {
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions{
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_16.toString()
     }
 }
 

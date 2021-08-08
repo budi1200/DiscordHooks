@@ -4,6 +4,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import net.luckperms.api.LuckPerms
 import net.luckperms.api.event.EventBus
+import net.luckperms.api.event.log.LogNetworkPublishEvent
 import net.luckperms.api.event.log.LogNotifyEvent
 import net.luckperms.api.event.log.LogReceiveEvent
 import si.budimir.discordHooks.DiscordHooksMain
@@ -18,7 +19,7 @@ class LuckpermsNodeChangeListener(private val plugin: DiscordHooksMain, private 
 
     fun register() {
         val eventBus: EventBus = this.luckperms.eventBus
-        eventBus.subscribe(plugin, LogNotifyEvent::class.java, this::onLog)
+        eventBus.subscribe(plugin, LogNetworkPublishEvent::class.java, this::onLog)
         eventBus.subscribe(plugin, LogReceiveEvent::class.java, this::onMessage)
     }
 
@@ -35,7 +36,7 @@ class LuckpermsNodeChangeListener(private val plugin: DiscordHooksMain, private 
         }
     }
 
-    private  fun onLog(e: LogNotifyEvent) {
+    private  fun onLog(e: LogNetworkPublishEvent) {
         if (e.isCancelled) return
 
         addEmbedEntry(e.entry.target.type.name, e.entry.source.name, e.entry.target.name, e.entry.description, e.entry.timestamp.toString())
