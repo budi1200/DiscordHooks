@@ -1,62 +1,73 @@
 package si.budimir.discordHooks.config
 
-import net.md_5.bungee.api.plugin.Plugin
-import net.md_5.bungee.config.Configuration
-import net.md_5.bungee.config.ConfigurationProvider
-import java.io.File
-
+import org.spongepowered.configurate.CommentedConfigurationNode
+import org.spongepowered.configurate.ConfigurateException
+import org.spongepowered.configurate.hocon.HoconConfigurationLoader
+import org.spongepowered.configurate.kotlin.objectMapperFactory
+import si.budimir.discordHooks.DiscordHooksMain
 import java.io.IOException
+import java.nio.file.Path
+import kotlin.io.path.createDirectory
+import kotlin.io.path.exists
 
-import net.md_5.bungee.config.YamlConfiguration
+open class ConfigBase<T>(plugin: DiscordHooksMain, fileName: String, private val clazz: Class<T>) {
+    private val logger = plugin.logger
+    private val dataDirectory = plugin.dataDirectory
+    private val configPath = Path.of("$dataDirectory/$fileName")
 
-import java.io.InputStream
-import java.nio.file.Files
+    private val loader = HoconConfigurationLoader.builder()
+        .path(configPath)
+        .prettyPrinting(true)
+        .defaultOptions { options ->
+            options.shouldCopyDefaults(true)
+            options.serializers { builder ->
+                builder.registerAnnotatedObjects(objectMapperFactory())
+            }
+        }
+        .build()
 
-open class ConfigBase(plugin: Plugin, _fileName: String) {
-    private val main: Plugin = plugin
-
-    private var configurationProvider: ConfigurationProvider = ConfigurationProvider.getProvider(YamlConfiguration::class.java)
-    private var mainConfig: Configuration? = null
-    private var configFile: File? = null
-    private val fileName: String = _fileName
-    private val logger = main.logger
+    private lateinit var root: CommentedConfigurationNode
+    private var config: T? = null
 
     fun reloadConfig(): Boolean {
-        try{
-            if (!main.dataFolder.exists() || !configFile!!.exists()){
-                logger.warning("Config file not found, making a new one")
-                saveDefaultConfig()
+        root = try {
+            loader.load()
+        } catch (e: IOException) {
+            logger.error("An error occurred while loading configuration: ${e.message}")
+            if (e.cause != null) {
+                e.cause!!.printStackTrace()
             }
-
-            if (configFile == null){
-                logger.warning("CONFIG NULL")
-                configFile = File(main.dataFolder, fileName)
-            }
-
-            mainConfig = configurationProvider.load(configFile)
-            return true
-        }catch (e: IOException){
-            logger.severe("Failed to reload config!")
             return false
         }
+
+        val tmp = root.get(clazz)
+
+        if (tmp == null) {
+            logger.error("An error occurred while parsing configuration")
+            return false
+        }
+
+        config = tmp
+
+        return true
     }
 
-    protected fun getConfig(): Configuration? {
-        if (mainConfig == null) reloadConfig()
-        return mainConfig
+    fun getConfig(): T {
+        if (config != null) reloadConfig()
+        return config!!
     }
 
     private fun saveDefaultConfig() {
-        if (!main.dataFolder.exists())
-            main.dataFolder.mkdir();
+        if (!dataDirectory.exists())
+            dataDirectory.createDirectory();
 
-        if (configFile == null)
-            configFile = File(main.dataFolder, fileName)
-
-        if (!configFile!!.exists()) {
-            val defaultStream: InputStream = main.getResourceAsStream(fileName)
-            val file = File(main.dataFolder, "config.yml")
-            Files.copy(defaultStream, file.toPath())
+        try {
+            val node: CommentedConfigurationNode = loader.load()
+            config = node[clazz]!!
+            node[clazz] = config
+            loader.save(node)
+        } catch (exception: ConfigurateException) {
+            logger.error("Could not load configuration: {}", exception.message)
         }
     }
 

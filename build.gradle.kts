@@ -1,27 +1,10 @@
 plugins {
     idea
-    kotlin("jvm") version "1.5.21"
-    id("com.github.johnrengelman.shadow") version "7.0.0"
-    kotlin("plugin.serialization") version "1.4.32"
-}
-
-group = "si.budimir"
-version = "1.4.0"
-
-repositories {
-    mavenCentral()
-    maven {  url = uri("https://papermc.io/repo/repository/maven-public/") }
-    maven { url = uri("https://jitpack.io") }
-}
-
-dependencies {
-    implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
-    implementation("com.squareup.okhttp3:okhttp:4.9.0")
-
-    compileOnly("io.github.waterfallmc:waterfall-api:1.16-R0.4-SNAPSHOT")
-    compileOnly("com.gitlab.ruany:LiteBansAPI:0.3.4")
-    compileOnly("net.luckperms:api:5.3")
+    kotlin("jvm") version "1.6.10"
+    kotlin("plugin.serialization") version "1.6.10"
+    kotlin("kapt") version "1.6.10"
+    id("com.github.johnrengelman.shadow") version "7.1.0"
+    id("net.kyori.blossom") version "1.3.0"
 }
 
 idea {
@@ -31,20 +14,62 @@ idea {
     }
 }
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     kotlinOptions{
-        jvmTarget = JavaVersion.VERSION_16.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 }
 
+group = "si.budimir"
+version = "1.5.0"
+
+repositories {
+    mavenCentral()
+    maven { url = uri("https://jitpack.io") }
+    maven {
+        name = "velocity"
+        url = uri("https://nexus.velocitypowered.com/repository/maven-public/")
+    }
+}
+
+dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+    implementation("com.squareup.okhttp3:okhttp:4.9.3")
+
+    compileOnly("com.velocitypowered:velocity-api:3.0.1")
+    kapt("com.velocitypowered:velocity-api:3.0.1")
+
+    implementation("org.spongepowered:configurate-hocon:4.1.2")
+    implementation("org.spongepowered:configurate-extra-kotlin:4.1.2")
+
+    implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
+
+    compileOnly("com.gitlab.ruany:LiteBansAPI:0.3.4")
+    compileOnly("net.luckperms:api:5.3")
+}
+
 tasks.shadowJar {
+    // This makes it shadow only stuff with "implementation"
     project.configurations.implementation.get().isCanBeResolved = true
-    configurations = mutableListOf(project.configurations.implementation.get())
-    minimize {}
+    configurations = mutableListOf(project.configurations.implementation.get()) as List<FileCollection>?
 }
 
 tasks.processResources {
     expand("version" to project.version)
+}
+
+blossom {
+    val file = "src/main/kotlin/si/budimir/discordHooks/util/Constants.kt"
+    mapOf(
+        "PLUGIN_NAME" to rootProject.name,
+        "PLUGIN_VERSION" to project.version
+    ).forEach { (k, v) ->
+        replaceToken("{$k}", v, file)
+    }
 }
 
 tasks.register("copyToServer"){
@@ -53,7 +78,7 @@ tasks.register("copyToServer"){
     doLast {
         copy {
             from("build/libs/DiscordHooks-" + project.version + "-all.jar")
-            into("C:\\Users\\budi1\\Desktop\\Custom Plugins\\01-proxy\\plugins")
+            into("../01-velocity-proxy/plugins/")
         }
     }
 }

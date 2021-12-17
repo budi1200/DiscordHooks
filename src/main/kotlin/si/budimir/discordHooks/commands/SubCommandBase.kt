@@ -1,18 +1,16 @@
 package si.budimir.discordHooks.commands
 
-import net.md_5.bungee.api.CommandSender
-import si.budimir.discordHooks.util.Permissions
+import com.velocitypowered.api.command.SimpleCommand
 
 interface SubCommandBase {
-    fun execute(sender: CommandSender, args: Array<String>)
 
-    fun onTabComplete(commandSender: CommandSender, args: Array<String>): List<String>{
-        return emptyList()
-    }
+    fun execute(invocation: SimpleCommand.Invocation)
 
-    fun getPermission(): String {
-        return Permissions.NONE.perm
-    }
+    fun suggestAsync(invocation: SimpleCommand.Invocation): MutableList<String>
+
+    fun getPermission(): String
 
     fun getDesc(): String
+
+    fun canConsoleUse(): Boolean
 }

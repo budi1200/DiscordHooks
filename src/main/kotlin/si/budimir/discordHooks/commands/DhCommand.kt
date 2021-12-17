@@ -1,14 +1,14 @@
 package si.budimir.discordHooks.commands
 
-import net.md_5.bungee.api.CommandSender
-import net.md_5.bungee.api.connection.ProxiedPlayer
-import net.md_5.bungee.api.plugin.Command
-import net.md_5.bungee.api.plugin.TabExecutor
+import com.velocitypowered.api.command.SimpleCommand
+import si.budimir.discordHooks.DiscordHooksMain
 import si.budimir.discordHooks.commands.subcommands.ReloadCommand
 import si.budimir.discordHooks.util.MessageHelper
 import si.budimir.discordHooks.util.Permissions
+import java.util.concurrent.CompletableFuture
 
-class DhCommand(name: String) : Command(name), TabExecutor {
+class DhCommand : SimpleCommand {
+    private val plugin = DiscordHooksMain.instance
     private val subCommands: MutableMap<String, SubCommandBase> = HashMap()
     private var subCommandsList: List<String> = emptyList()
 
@@ -18,32 +18,37 @@ class DhCommand(name: String) : Command(name), TabExecutor {
         subCommandsList = subCommands.keys.toList()
     }
 
-    override fun execute(sender: CommandSender, args: Array<String>) {
-        val messenger = MessageHelper()
+    override fun execute(invocation: SimpleCommand.Invocation) {
+        val sender = invocation.source()
+        val args = invocation.arguments()
 
         if(args.isNotEmpty()) run {
             val sc: SubCommandBase = subCommands[args[0]] ?: return
             val reqPerm: String = sc.getPermission()
 
             if(reqPerm == Permissions.NONE.perm || sender.hasPermission(reqPerm)){
-                sc.execute(sender, args)
+                sc.execute(invocation)
             }else{
-                messenger.sendMessage(sender as ProxiedPlayer, messenger.parsePlaceholders(true,"lang.missingPermissions", sender.name))
+                MessageHelper.sendMessage(sender, plugin.mainConfig.missingPermissions)
             }
         }
     }
 
-    override fun onTabComplete(sender: CommandSender, args: Array<String>): List<String> {
-        return when {
-            args[0] == "" -> {
-                subCommandsList
-            }
-            args.size == 1 -> {
-                subCommandsList.filter { it.contains(args[0], ignoreCase = true) }
-            }
-            else -> {
-                val sc: SubCommandBase = subCommands[args[0]] ?: return emptyList()
-                sc.onTabComplete(sender, args)
+    override fun suggestAsync(invocation: SimpleCommand.Invocation): CompletableFuture<MutableList<String>> {
+        val args = invocation.arguments()
+
+        return CompletableFuture.supplyAsync {
+            return@supplyAsync when {
+                args.isEmpty() -> {
+                    subCommandsList.toMutableList()
+                }
+                args.size == 1 -> {
+                    subCommandsList.filter { it.contains(args[0], ignoreCase = true) }.toMutableList()
+                }
+                else -> {
+                    val sc: SubCommandBase = subCommands[args[0]] ?: return@supplyAsync mutableListOf()
+                    sc.suggestAsync(invocation)
+                }
             }
         }
     }

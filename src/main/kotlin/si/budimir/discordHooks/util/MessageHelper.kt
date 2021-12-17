@@ -1,83 +1,65 @@
 package si.budimir.discordHooks.util
 
-import net.md_5.bungee.api.chat.*
-import net.md_5.bungee.api.chat.hover.content.Text
-import net.md_5.bungee.api.connection.ProxiedPlayer
+import com.velocitypowered.api.command.CommandSource
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.ComponentLike
+import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.minimessage.MiniMessage
 import si.budimir.discordHooks.DiscordHooksMain
-import si.budimir.discordHooks.config.MainConfig
+import java.util.function.Function
 
-class MessageHelper {
-    private val plugin: DiscordHooksMain = DiscordHooksMain.instance
-    private val config: MainConfig = plugin.mainConfig
-    private val pluginPrefix = config.getString("pluginPrefix")
+abstract class MessageHelper {
+    companion object {
+        private lateinit var plugin: DiscordHooksMain
+        private lateinit var pluginPrefix: Component
 
-    private fun getPrefix(): TextComponent {
-        return TextComponent(pluginPrefix)
-    }
-
-    fun sendWithPrefix(player: ProxiedPlayer, msg: String){
-        val builder = ComponentBuilder()
-
-        builder.append(getPrefix())
-        builder.append(msg)
-
-        player.sendMessage(*builder.create())
-    }
-
-    fun sendMessage(player: ProxiedPlayer, msg: Array<BaseComponent>){
-        player.sendMessage(*msg)
-    }
-
-    fun parsePlaceholders(addPrefix: Boolean, configString: String, player: String?, code: String? = null, discordUser: String? = null): Array<BaseComponent> {
-        val builder = ComponentBuilder()
-        if (addPrefix)
-            builder.append(getPrefix())
-
-        val message: String = config.getString(configString)
-        val messageArr: List<String> = message.split(Regex("(?<=[%])|(?=[%])"))
-        var tmpString: String
-        val newCode: String? = code
-        val messageSize = messageArr.size
-        var i = 0
-
-        while(i < messageSize) {
-            val item = messageArr[i]
-            val secondItem = if (i + 1 < messageArr.size) messageArr[i + 1] else "null"
-            val thirdItem = if (i + 2 < messageArr.size) messageArr[i + 2] else "null"
-
-            if (item == "%" && thirdItem == "%") {
-                if (secondItem == "discord") {
-                    tmpString = config.getString("discordInvite")
-
-                    builder.append(TextComponent.fromLegacyText(tmpString))
-                    builder.append("").retain(ComponentBuilder.FormatRetention.FORMATTING)
-                    i+=3
-                } else if (secondItem == "code" && newCode != null){
-                    tmpString = config.getString("lang.clickToCopy")
-
-                    builder.append(TextComponent.fromLegacyText(newCode)).event(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, code)).event(
-                        HoverEvent(HoverEvent.Action.SHOW_TEXT, Text(tmpString))
-                    )
-                    builder.append("").retain(ComponentBuilder.FormatRetention.FORMATTING)
-                    i+=3
-                } else if (secondItem == "player" && player != null) {
-                    tmpString = player
-
-                    builder.append(TextComponent.fromLegacyText(tmpString))
-                    i+=3
-                } else if (secondItem == "discordUser" && discordUser != null) {
-                    builder.append(TextComponent.fromLegacyText(discordUser))
-
-                    i+=3
-                } else {
-                    builder.append(TextComponent.fromLegacyText(item))
-                    i+=1
-                }
-            } else {
-                builder.append(TextComponent.fromLegacyText(item))
-                i+=1
-            }
+        fun load(plugin: DiscordHooksMain) {
+            this.plugin = plugin
+            pluginPrefix = parseString(plugin.mainConfig.pluginPrefix)
         }
-        return builder.create()
+
+        val resolver = Function<String, ComponentLike?> { name: String ->
+            null
+        }
+
+        private val miniMessage = MiniMessage.builder().markdown().placeholderResolver(resolver).build()
+
+        fun reloadPrefix(){
+            pluginPrefix = parseString(plugin.mainConfig.pluginPrefix)
+        }
+
+        fun sendMessage(commandSource: CommandSource, rawMessage: String, placeholders: MutableMap<String, String> = hashMapOf(), prefix: Boolean = true) {
+            var output = Component.text("")
+
+            // Add prefix if required
+            if (prefix)
+                output = output.append(pluginPrefix)
+
+            output = output.append(parseString(rawMessage, placeholders))
+
+            commandSource.sendMessage(output)
+        }
+
+        fun parseString(key: String, placeholders: Map<String, String> = hashMapOf()): Component {
+            return Component
+                .text("")
+                .decoration(TextDecoration.ITALIC, false)
+                .append(
+                    miniMessage.parse(key, placeholders)
+                )
+        }
+
+        fun getParsedString(key: String, placeholders: Map<String, String> = hashMapOf()): Component {
+            return Component
+                .text("")
+                .decoration(TextDecoration.ITALIC, false)
+                .append(
+                    miniMessage.parse(key, placeholders)
+                )
+        }
+
+        fun getNonMarkdownParsed(key: String, placeholders: Map<String, String> = hashMapOf()): Component {
+            return miniMessage.parse(key, placeholders)
+        }
     }
 }

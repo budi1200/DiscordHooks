@@ -32,7 +32,7 @@ class LitebansListener : Events.Listener() {
 
     private fun getPlayerName(uuid: String?, callback: (String) -> Unit) {
         var playerName = ""
-        plugin.proxy.scheduler.runAsync(plugin) {
+        plugin.server.scheduler.buildTask(plugin) {
             if (uuid == null) {
                 callback("")
             }
@@ -56,7 +56,7 @@ class LitebansListener : Events.Listener() {
                 rs?.close()
             }
             callback(playerName)
-        }
+        }.schedule()
     }
 
     private fun buildEmbed(
@@ -70,9 +70,9 @@ class LitebansListener : Events.Listener() {
     ): EmbedContent {
         val ip: String = if (isIpBan) "IP " else ""
 
-        val title = ip + type.toLowerCase().capitalize()
-        val thumbnail = Thumbnail("https://minotar.net/helm/${player}/40.png")
-        val footer = Footer("https://minotar.net/helm/${issuer}/40.png", "Issuer: $issuer • ID #${id}")
+        val title = ip + type.lowercase().replaceFirstChar { it.uppercase() }
+        val thumbnail = Thumbnail("https://crafthead.net/helm/${player}/40.png")
+        val footer = Footer("https://crafthead.net/helm/${issuer}/40.png", "Issuer: $issuer • ID #${id}")
         val fields = arrayListOf<Field>()
 
         fields.add(Field("Player", player ?: "Error", true))
@@ -86,6 +86,6 @@ class LitebansListener : Events.Listener() {
         val embed = Embed(arrayListOf(entry))
 
         val json = Json.encodeToJsonElement(embed)
-        WebHookHandler.send(json.toString(), plugin.mainConfig.getString("webhooks.litebans"))
+        WebHookHandler.send(json.toString(), plugin.mainConfig.litebansWebhook)
     }
 }
