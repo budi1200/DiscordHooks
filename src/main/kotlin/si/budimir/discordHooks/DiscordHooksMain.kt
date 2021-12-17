@@ -8,6 +8,7 @@ import com.velocitypowered.api.plugin.Dependency
 import com.velocitypowered.api.plugin.Plugin
 import com.velocitypowered.api.plugin.annotation.DataDirectory
 import com.velocitypowered.api.proxy.ProxyServer
+import litebans.api.Events
 import net.luckperms.api.LuckPermsProvider
 import org.slf4j.Logger
 import si.budimir.discordHooks.commands.DhCommand
@@ -28,7 +29,7 @@ import java.time.Instant
     authors = ["budi1200"],
     dependencies = [
         Dependency(id = "luckperms"),
-//        Dependency(id = "litebans")
+        Dependency(id = "litebans")
     ]
 )
 class DiscordHooksMain {
@@ -74,7 +75,7 @@ class DiscordHooksMain {
         commandManager.register("dh", dhCommand)
 
         // Litebans Integration
-//        Events.get().register(LitebansListener())
+        Events.get().register(LitebansListener())
 
         // Luckperms integration
         try {
