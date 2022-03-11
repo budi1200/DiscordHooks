@@ -2,11 +2,11 @@ package si.budimir.discordHooks.util
 
 import com.velocitypowered.api.command.CommandSource
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.ComponentLike
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import si.budimir.discordHooks.DiscordHooksMain
-import java.util.function.Function
 
 abstract class MessageHelper {
     companion object {
@@ -18,11 +18,7 @@ abstract class MessageHelper {
             pluginPrefix = parseString(plugin.mainConfig.pluginPrefix)
         }
 
-        val resolver = Function<String, ComponentLike?> { name: String ->
-            null
-        }
-
-        private val miniMessage = MiniMessage.builder().markdown().placeholderResolver(resolver).build()
+        private val miniMessage = MiniMessage.builder().build()
 
         fun reloadPrefix(){
             pluginPrefix = parseString(plugin.mainConfig.pluginPrefix)
@@ -41,25 +37,25 @@ abstract class MessageHelper {
         }
 
         fun parseString(key: String, placeholders: Map<String, String> = hashMapOf()): Component {
+            val resolver = TagResolver.resolver(placeholders.map { Placeholder.parsed(it.key, it.value) })
+
             return Component
                 .text("")
                 .decoration(TextDecoration.ITALIC, false)
                 .append(
-                    miniMessage.parse(key, placeholders)
+                    miniMessage.deserialize(key, resolver)
                 )
         }
 
         fun getParsedString(key: String, placeholders: Map<String, String> = hashMapOf()): Component {
+            val resolver = TagResolver.resolver(placeholders.map { Placeholder.parsed(it.key, it.value) })
+
             return Component
                 .text("")
                 .decoration(TextDecoration.ITALIC, false)
                 .append(
-                    miniMessage.parse(key, placeholders)
+                    miniMessage.deserialize(key, resolver)
                 )
-        }
-
-        fun getNonMarkdownParsed(key: String, placeholders: Map<String, String> = hashMapOf()): Component {
-            return miniMessage.parse(key, placeholders)
         }
     }
 }

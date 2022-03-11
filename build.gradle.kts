@@ -25,31 +25,26 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 }
 
 group = "si.budimir"
-version = "1.5.0"
+version = "1.6.0"
 
 repositories {
     mavenCentral()
     maven { url = uri("https://jitpack.io") }
-    maven {
-        name = "velocity"
-        url = uri("https://nexus.velocitypowered.com/repository/maven-public/")
-    }
+    maven { url = uri("https://papermc.io/repo/repository/maven-public/") }
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
     implementation("com.squareup.okhttp3:okhttp:4.9.3")
 
-    compileOnly("com.velocitypowered:velocity-api:3.0.1")
-    kapt("com.velocitypowered:velocity-api:3.0.1")
+    compileOnly("com.velocitypowered:velocity-api:3.1.2-SNAPSHOT")
+    kapt("com.velocitypowered:velocity-api:3.1.2-SNAPSHOT")
 
     implementation("org.spongepowered:configurate-hocon:4.1.2")
     implementation("org.spongepowered:configurate-extra-kotlin:4.1.2")
 
-    implementation("net.kyori:adventure-text-minimessage:4.1.0-SNAPSHOT")
-
     compileOnly("com.gitlab.ruany:LiteBansAPI:0.3.4")
-    compileOnly("net.luckperms:api:5.3")
+    compileOnly("net.luckperms:api:5.4")
 }
 
 tasks.shadowJar {
