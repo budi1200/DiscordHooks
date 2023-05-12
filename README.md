@@ -26,9 +26,9 @@ DiscordHooks requires a Velocity proxy version 3.1.2 or higher (not tested).
 
 ### Configuration
 
-On startup a configuration file is loaded: `config.yml`. This file is generated automatically on first startup and can be found in the plugin's data folder.
+On startup a configuration file is loaded: `config.conf`. This file is generated automatically on first startup and can be found in the plugin's data folder.
 
-- `config.yml` contains settings for the plugin and language strings.
+- `config.conf` contains settings for the plugin and language strings.
 
 ### Usage
 
